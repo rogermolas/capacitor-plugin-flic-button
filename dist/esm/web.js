@@ -1,5 +1,17 @@
 import { WebPlugin } from '@capacitor/core';
 export class FlickButtonWeb extends WebPlugin {
+    async addListener(eventName, listenerFunc) {
+        console.log('ADD LISTENER', eventName);
+        return Promise.resolve({ remove: () => { } });
+    }
+    async getButtons() {
+        console.log('BUTTONS');
+        return Promise.resolve({ buttons: [] });
+    }
+    isScanning() {
+        console.log('SCANNING');
+        return Promise.resolve({ scanning: false });
+    }
     async scanForButtons() {
         console.log('SCAN');
     }

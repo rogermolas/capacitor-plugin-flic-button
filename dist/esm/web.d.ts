@@ -1,6 +1,17 @@
-import { WebPlugin } from '@capacitor/core';
+import { ListenerCallback, PluginListenerHandle, WebPlugin } from '@capacitor/core';
 import type { FlicButtonPlugin } from './definitions';
 export declare class FlickButtonWeb extends WebPlugin implements FlicButtonPlugin {
+    addListener(eventName: string, listenerFunc: ListenerCallback): Promise<PluginListenerHandle>;
+    getButtons(): Promise<{
+        buttons: {
+            buttonId: string;
+            name: string;
+            state: number;
+        }[];
+    }>;
+    isScanning(): Promise<{
+        scanning: boolean;
+    }>;
     scanForButtons(): Promise<void>;
     connectButton(options: {
         buttonId: string;

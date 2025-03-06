@@ -10,6 +10,8 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
     
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "echo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getButtons", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isScanning", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scanForButtons", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnectButton", returnType: CAPPluginReturnPromise),
@@ -27,11 +29,40 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         flicManager = FLICManager.shared()
     }
 
+    @objc public func getButtons(_ call: CAPPluginCall) {
+        guard let buttons = FLICManager.shared()?.buttons as? [FLICButton] else {
+            call.resolve(["buttons": []])
+            return
+        }
+
+        let buttonList = buttons.map { button in
+            return [
+                "buttonId": button.bluetoothAddress,
+                "name": button.name ?? "",
+                "state": button.state.rawValue
+            ]
+        }
+        call.resolve(["buttons": buttonList])
+    }
+
     // MARK: - Start Scanning for Buttons
+    @objc public func isScanning(_ call: CAPPluginCall) {
+        let scanning = FLICManager.shared()?.isScanning ?? false
+        call.resolve(["isScanning": scanning])
+    }
+    
+    @objc public func stopScanning(_ call: CAPPluginCall) {
+        FLICManager.shared()?.stopScan()
+        call.resolve(["stopScan": "true"])
+    }
+    
     @objc func scanForButtons(_ call: CAPPluginCall) {
         guard let flicManager = flicManager else {
             call.reject("Flic Manager is not initialized")
             return
+        }
+        if (flicManager.isScanning) {
+            flicManager.stopScan()
         }
 
         flicManager.scanForButtons(stateChangeHandler: { event in
@@ -46,17 +77,14 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
             self.notifyListeners("scanEvent", data: ["message": stateMessage])
         }) { (button, error) in
             if let error = error {
+                self.notifyListeners("scanFailed", data: ["error": error])
                 call.reject("<IOS FLIC:> Scan failed : \(error.localizedDescription) : \(error)")
                 return
             }
             if let button = button {
                 button.triggerMode = .clickAndDoubleClickAndHold
                 self.notifyListeners("scanSuccess", data: ["buttonId": button.bluetoothAddress])
-                call.resolve([
-                    "buttonId": button.bluetoothAddress,
-                    "uuid": button.uuid, 
-                    "name": "\(button.nickname ?? "NA")"
-                ])
+                call.resolve(["message" : "<IOS FLIC:> Scan Successful"])
             }
         }
     }
@@ -99,12 +127,18 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
 // MARK: - FLICButtonDelegate
 extension FlicButtonPlugin: FLICButtonDelegate {
     public func buttonDidConnect(_ button: FLICButton) {
-        notifyListeners("buttonConnected", data: ["buttonId": button.bluetoothAddress])
+        notifyListeners("buttonConnected", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+        ])
     }
 
     public func button(_ button: FLICButton, didDisconnectWithError error: (any Error)?) {
         notifyListeners("buttonDisconnected", data: [
             "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
             "error": error?.localizedDescription ?? "Unknown error"
         ])
     }
@@ -112,24 +146,45 @@ extension FlicButtonPlugin: FLICButtonDelegate {
     public func button(_ button: FLICButton, didFailToConnectWithError error: (any Error)?) {
         notifyListeners("buttonConnectionFailed", data: [
             "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
             "error": error?.localizedDescription ?? "Unknown error"
         ])
     }
 
     public func buttonIsReady(_ button: FLICButton) {
-        notifyListeners("buttonReady", data: ["buttonId": button.bluetoothAddress])
+        notifyListeners("buttonReady", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+        ])
     }
 
     public func button(_ button: FLICButton, didReceiveButtonClick queued: Bool, age: Int) {
-        notifyListeners("buttonClick", data: ["buttonId": button.bluetoothAddress, "event": "singleClick"])
+        notifyListeners("buttonClick", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+            "event": "single_click"
+        ])
     }
     
     public func button(_ button: FLICButton, didReceiveButtonDoubleClick queued: Bool, age: Int) {
-        notifyListeners("buttonClick", data: ["buttonId": button.bluetoothAddress, "event": "doubleClick"])
+        notifyListeners("buttonClick", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+            "event": "double_click"
+        ])
     }
     
     public func button(_ button: FLICButton, didReceiveButtonHold queued: Bool, age: Int) {
-        notifyListeners("buttonClick", data: ["buttonId": button.bluetoothAddress, "event": "hold"])
+        notifyListeners("buttonClick", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+            "event": "hold"
+        ])
     }
 }
 
