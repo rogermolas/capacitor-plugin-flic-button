@@ -1,6 +1,6 @@
 # capacitor-plugin-flic-button
 
-Capacitor plugin support for flic2 device
+Capacitor plugin support for Flic2 device
 
 ## Install
 
@@ -13,6 +13,8 @@ npx cap sync
 
 <docgen-index>
 
+* [`getButtons()`](#getbuttons)
+* [`isScanning()`](#isscanning)
 * [`scanForButtons()`](#scanforbuttons)
 * [`connectButton(...)`](#connectbutton)
 * [`disconnectButton(...)`](#disconnectbutton)
@@ -25,20 +27,25 @@ npx cap sync
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### echo(...)
+### getButtons()
 
 ```typescript
-echo(options: { value: string; }) => Promise<{ value: string; }>
+getButtons() => Promise<{ buttons: FlicButtonDevice[] }>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
-
-**Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
+**Returns:** <code>Promise&lt;{ buttons: FlicButtonDevice[] }&gt;</code>
 
 --------------------
 
+### isScanning()
+
+```typescript
+isScanning() => Promise<{ scanning: boolean }>
+```
+
+**Returns:** <code>Promise&lt;{ scanning: boolean }&gt;</code>
+
+--------------------
 
 ### scanForButtons()
 
@@ -47,7 +54,6 @@ scanForButtons() => Promise<void>
 ```
 
 --------------------
-
 
 ### connectButton(...)
 
@@ -63,7 +69,6 @@ connectButton(options: { buttonId: string; }) => Promise<{ message: string; }>
 
 --------------------
 
-
 ### disconnectButton(...)
 
 ```typescript
@@ -78,7 +83,6 @@ disconnectButton(options: { buttonId: string; }) => Promise<{ message: string; }
 
 --------------------
 
-
 ### removeAllButtons()
 
 ```typescript
@@ -88,7 +92,6 @@ removeAllButtons() => Promise<{ message: string; }>
 **Returns:** <code>Promise&lt;{ message: string; }&gt;</code>
 
 --------------------
-
 
 ### addListener(string, ...)
 
@@ -103,16 +106,5 @@ addListener(eventName: string, listenerFunc: (data: any) => void) => Promise<Plu
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
-
-### Interfaces
-
-
-#### PluginListenerHandle
-
-| Prop         | Type                                      |
-| ------------ | ----------------------------------------- |
-| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
 
 </docgen-api>

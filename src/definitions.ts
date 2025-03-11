@@ -1,5 +1,6 @@
 import { PluginListenerHandle } from "@capacitor/core";
 
+// JS Flic2 Button Object
 export interface FlicButtonDevice {
   buttonId: string,
   name: string,
