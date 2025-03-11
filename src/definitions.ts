@@ -1,8 +1,14 @@
 import { PluginListenerHandle } from "@capacitor/core";
 
+export interface FlicButtonDevice {
+  buttonId: string,
+  name: string,
+  state: number
+}
+
 export interface FlicButtonPlugin {
   echo(options: { value: string }): Promise<{ value: string }>;
-  getButtons(): Promise<{ buttons: { buttonId: string; name: string; state: number }[] }>;
+  getButtons(): Promise<{ buttons: FlicButtonDevice[] }>;
   isScanning(): Promise<{ scanning: boolean }>;
   scanForButtons(): Promise<void>;
   connectButton(options: { buttonId: string }): Promise<{ message: string }>;

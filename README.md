@@ -1,6 +1,6 @@
 # capacitor-plugin-flic-button
 
-Flic2Button support for react ionic capacitor project
+Capacitor plugin support for flic2 device
 
 ## Install
 
@@ -13,7 +13,6 @@ npx cap sync
 
 <docgen-index>
 
-* [`echo(...)`](#echo)
 * [`scanForButtons()`](#scanforbuttons)
 * [`connectButton(...)`](#connectbutton)
 * [`disconnectButton(...)`](#disconnectbutton)
