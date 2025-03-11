@@ -1,0 +1,46 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Capacitor build outputs
+android/app/build/
+android/build/
+ios/App/build/
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+
+# TypeScript build files
+dist/
+lib/
+*.tsbuildinfo
+
+# macOS system files
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.temp
+*.swp
+
+# IDE/editor specific files
+.vscode/
+.idea/
+*.iml
+
+# Environment variables (if applicable)
+.env
+.env.local
+.env.*.local
+
+# JetBrains IDE settings
+/.idea/
+*.iml
+
+# Xcode specific files
+xcuserdata/
+DerivedData/
+*.xcworkspace
