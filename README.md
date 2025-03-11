@@ -20,7 +20,6 @@ npx cap sync
 * [`disconnectButton(...)`](#disconnectbutton)
 * [`removeAllButtons()`](#removeallbuttons)
 * [`addListener(string, ...)`](#addlistenerstring-)
-* [Interfaces](#interfaces)
 
 </docgen-index>
 
