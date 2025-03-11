@@ -17,8 +17,6 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "disconnectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeAllButtons", returnType: CAPPluginReturnPromise),
     ]
-    
-    private var flicManager: FLICManager?
 
     @objc func echo(_ call: CAPPluginCall) {
         call.resolve(["value": "Flic Called"])
@@ -26,12 +24,12 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
     
     override public func load() {
         FLICManager.configure(with: self, buttonDelegate: self, background: true)
-        flicManager = FLICManager.shared()
     }
 
     @objc public func getButtons(_ call: CAPPluginCall) {
-        guard let buttons = FLICManager.shared()?.buttons as? [FLICButton] else {
-            call.resolve(["buttons": []])
+        guard let buttons = FLICManager.shared()?.buttons() as? [FLICButton] else {
+            let errorMessage = "Flic Manager: No buttons found or unable to cast to [FLICButton]."
+            call.reject(errorMessage)
             return
         }
 
@@ -42,8 +40,12 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
                 "state": button.state.rawValue
             ]
         }
-        call.resolve(["buttons": buttonList])
+        print("Returning Flic buttons: \(buttonList)")
+        DispatchQueue.main.async {
+            call.resolve(["buttons": buttonList])
+        }
     }
+
 
     // MARK: - Start Scanning for Buttons
     @objc public func isScanning(_ call: CAPPluginCall) {
@@ -56,35 +58,32 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["stopScan": "true"])
     }
     
-    @objc func scanForButtons(_ call: CAPPluginCall) {
-        guard let flicManager = flicManager else {
-            call.reject("Flic Manager is not initialized")
-            return
-        }
-        if (flicManager.isScanning) {
-            flicManager.stopScan()
-        }
-
-        flicManager.scanForButtons(stateChangeHandler: { event in
-            var stateMessage = ""
-            switch event {
-            case .discovered: stateMessage = "A Flic was discovered."
-            case .connected: stateMessage = "A Flic is being verified."
-            case .verified: stateMessage = "The Flic was verified successfully."
-            case .verificationFailed: stateMessage = "The Flic verification failed."
-            default: break
-            }
-            self.notifyListeners("scanEvent", data: ["message": stateMessage])
-        }) { (button, error) in
-            if let error = error {
-                self.notifyListeners("scanFailed", data: ["error": error])
-                call.reject("<IOS FLIC:> Scan failed : \(error.localizedDescription) : \(error)")
-                return
-            }
-            if let button = button {
-                button.triggerMode = .clickAndDoubleClickAndHold
-                self.notifyListeners("scanSuccess", data: ["buttonId": button.bluetoothAddress])
-                call.resolve(["message" : "<IOS FLIC:> Scan Successful"])
+    @objc func scanForButtons(_ call: CAPPluginCall) {    
+        DispatchQueue.main.async {
+            
+            FLICManager.shared()?.scanForButtons(stateChangeHandler: { event in
+                var stateMessage = ""
+                switch event {
+                case .discovered: stateMessage = "A Flic was discovered."
+                case .connected: stateMessage = "A Flic is being verified."
+                case .verified: stateMessage = "The Flic was verified successfully."
+                case .verificationFailed: stateMessage = "The Flic verification failed."
+                default: break
+                }
+                self.notifyListeners("scanStarted", data: ["message": stateMessage])
+            }) { (button, error:Error?) in
+                
+                if (error == nil) {
+                    if let button = button {
+                        button.triggerMode = .clickAndDoubleClickAndHold
+                        print("Flic button found : \(button)")
+                        self.notifyListeners("scanSuccess", data: ["buttonId": button.bluetoothAddress])
+                        call.resolve(["message" : "<IOS FLIC:> Scan Successful"])
+                    }
+                } else {
+                    self.notifyListeners("scanFailed", data: ["error": error.debugDescription])
+                    call.reject("<IOS FLIC:> Scan failed : \(error.debugDescription)")
+                }
             }
         }
     }
@@ -92,7 +91,8 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Connect to a Button
     @objc func connectButton(_ call: CAPPluginCall) {
         guard let buttonId = call.getString("buttonId"),
-              let button = flicManager?.buttons().first(where: { $0.bluetoothAddress == buttonId }) else {
+              let button = FLICManager.shared()?.buttons().first(
+                where: { $0.bluetoothAddress == buttonId }) else {
             call.reject("Button not found")
             return
         }
@@ -104,7 +104,8 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Disconnect a Button
     @objc func disconnectButton(_ call: CAPPluginCall) {
         guard let buttonId = call.getString("buttonId"),
-              let button = flicManager?.buttons().first(where: { $0.bluetoothAddress == buttonId }) else {
+              let button = FLICManager.shared()?.buttons().first(
+                where: { $0.bluetoothAddress == buttonId }) else {
             call.reject("Button not found")
             return
         }
@@ -115,8 +116,8 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - Remove All Buttons
     @objc func removeAllButtons(_ call: CAPPluginCall) {
-        for button in flicManager?.buttons() ?? [] {
-            flicManager?.forgetButton(button, completion: { (uuid, error) in
+        for button in FLICManager.shared()?.buttons() ?? [] {
+            FLICManager.shared()?.forgetButton(button, completion: { (uuid, error) in
                 self.notifyListeners("buttonRemoved", data: ["buttonId": uuid.uuidString])
             })
         }
@@ -191,10 +192,10 @@ extension FlicButtonPlugin: FLICButtonDelegate {
 // MARK: - FLICManagerDelegate
 extension FlicButtonPlugin:  FLICManagerDelegate{
     public func managerDidRestoreState(_ manager: FLICManager) {
-        notifyListeners("restoreState", data: ["message": "State restored with \(manager.buttons().count) buttons"])
+        notifyListeners("managerRestoreState", data: ["total": "\(manager.buttons().count) buttons found"])
     }
 
     public func manager(_ manager: FLICManager, didUpdate state: FLICManagerState) {
-        notifyListeners("managerStateUpdate", data: ["state": state.rawValue])
+        notifyListeners("managerUpdateState", data: ["state": state.rawValue])
     }
 }
