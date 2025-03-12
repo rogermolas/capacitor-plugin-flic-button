@@ -13,6 +13,7 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getButtons", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isScanning", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scanForButtons", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopScanning", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeAllButtons", returnType: CAPPluginReturnPromise),
@@ -45,7 +46,6 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
             call.resolve(["buttons": buttonList])
         }
     }
-
 
     // MARK: - Start Scanning for Buttons
     @objc public func isScanning(_ call: CAPPluginCall) {

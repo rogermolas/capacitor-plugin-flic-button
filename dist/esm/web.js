@@ -13,7 +13,12 @@ export class FlickButtonWeb extends WebPlugin {
         return Promise.resolve({ scanning: false });
     }
     async scanForButtons() {
-        console.log('SCAN');
+        console.log('START SCAN');
+        return Promise.resolve({ message: "Scanning" });
+    }
+    async stopScanning() {
+        console.log('STOP SCAN');
+        return Promise.resolve({ message: 'Stopped' });
     }
     connectButton(options) {
         console.log('CONNECT', options);
