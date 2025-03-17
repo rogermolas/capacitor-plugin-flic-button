@@ -12,12 +12,7 @@ export declare class FlickButtonWeb extends WebPlugin implements FlicButtonPlugi
     isScanning(): Promise<{
         scanning: boolean;
     }>;
-    scanForButtons(): Promise<{
-        message: string;
-    }>;
-    stopScanning(): Promise<{
-        message: string;
-    }>;
+    scanForButtons(): Promise<void>;
     connectButton(options: {
         buttonId: string;
     }): Promise<{

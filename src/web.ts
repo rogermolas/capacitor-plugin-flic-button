@@ -16,13 +16,8 @@ export class FlickButtonWeb extends WebPlugin implements FlicButtonPlugin {
     console.log('SCANNING');
     return Promise.resolve({ scanning: false });
   }
-  async scanForButtons(): Promise<{ message: string; }> {
-    console.log('START SCAN');
-    return Promise.resolve({ message: "Scanning" });
-  }
-  async stopScanning(): Promise<{ message: string; }> {
-    console.log('STOP SCAN');
-    return Promise.resolve({ message: 'Stopped' });
+  async scanForButtons(): Promise<void> {
+    console.log('SCAN');
   }
   connectButton(options: { buttonId: string; }): Promise<{ message: string; }> {
     console.log('CONNECT', options);

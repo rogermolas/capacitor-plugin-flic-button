@@ -13,7 +13,6 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getButtons", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isScanning", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scanForButtons", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "stopScanning", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeAllButtons", returnType: CAPPluginReturnPromise),
@@ -47,6 +46,7 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+
     // MARK: - Start Scanning for Buttons
     @objc public func isScanning(_ call: CAPPluginCall) {
         let scanning = FLICManager.shared()?.isScanning ?? false
@@ -58,7 +58,7 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["stopScan": "true"])
     }
     
-    @objc func scanForButtons(_ call: CAPPluginCall) {    
+    @objc func scanForButtons(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             
             FLICManager.shared()?.scanForButtons(stateChangeHandler: { event in
@@ -97,8 +97,12 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         button.connect()
-        notifyListeners("buttonConnecting", data: ["buttonId": button.bluetoothAddress])
-        call.resolve(["message": "Button connecting..."])
+        notifyListeners("buttonConnected", data: [
+            "buttonId": button.bluetoothAddress,
+            "name": button.name ?? "",
+            "state": button.state.rawValue,
+        ])
+        call.resolve(["message": "Button connected..."])
     }
 
     // MARK: - Disconnect a Button
