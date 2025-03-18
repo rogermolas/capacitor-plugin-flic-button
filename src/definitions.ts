@@ -8,12 +8,14 @@ export interface FlicButtonDevice {
 }
 
 export interface FlicButtonPlugin {
-  echo(options: { value: string }): Promise<{ value: string }>;
+  initialize(): Promise<{ value: string }>;
   getButtons(): Promise<{ buttons: FlicButtonDevice[] }>;
-  isScanning(): Promise<{ scanning: boolean }>;
-  scanForButtons(): Promise<void>;
+  isScanning(): Promise<{ isScanning: boolean }>;
+  stopScanning(): Promise<{ isScanning: boolean }>;
+  scanForButtons(): Promise<{ message: string }>;
   connectButton(options: { buttonId: string }): Promise<{ message: string }>;
   disconnectButton(options: { buttonId: string }): Promise<{ message: string }>;
+  forgetButton(options: { buttonId: string }): Promise<{ message: string }>;
   removeAllButtons(): Promise<{ message: string }>;
 
   addListener<T = any>(

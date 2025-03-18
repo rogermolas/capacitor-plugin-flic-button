@@ -12,12 +12,16 @@ export class FlickButtonWeb extends WebPlugin implements FlicButtonPlugin {
     console.log('BUTTONS');
     return Promise.resolve({ buttons: [] });
   }
-  isScanning(): Promise<{ scanning: boolean; }> {
+  isScanning(): Promise<{ isScanning: boolean; }> {
     console.log('SCANNING');
-    return Promise.resolve({ scanning: false });
+    return Promise.resolve({ isScanning: true });
   }
-  async scanForButtons(): Promise<void> {
-    console.log('SCAN');
+  stopScanning(): Promise<{ isScanning: boolean; }> {
+    console.log('STOP SCANNING');
+    return Promise.resolve({ isScanning: false });
+  }
+  async scanForButtons(): Promise<{ message: string; }>{
+    return Promise.resolve({ message: 'Connected' });
   }
   connectButton(options: { buttonId: string; }): Promise<{ message: string; }> {
     console.log('CONNECT', options);
@@ -26,6 +30,10 @@ export class FlickButtonWeb extends WebPlugin implements FlicButtonPlugin {
   disconnectButton(options: { buttonId: string; }): Promise<{ message: string; }> {
     console.log('DISCONNECT', options);
     return Promise.resolve({ message: 'Disconnected' });
+  }
+  forgetButton(options: { buttonId: string; }): Promise<{ message: string; }> {
+    console.log('FORGET', options);
+    return Promise.resolve({ message: 'Forgotten' });
   }
   removeAllButtons(): Promise<{ message: string; }> {
     console.log('REMOVE ALL');

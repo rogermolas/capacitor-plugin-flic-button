@@ -39,14 +39,14 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDele
        private func setupFlic(_ call: CAPPluginCall) {
            DispatchQueue.main.async {
                if self.isFlicInitialized {
-                   call.resolve(["message": "Flic is already initialized."])
                    self.notifyListeners("initialized", data: ["message": "Flic initialization successful."])
+                   call.resolve(["message": "Flic is already initialized."])
                    return
                }
                FLICManager.configure(with: self, buttonDelegate: self, background: true)
                self.isFlicInitialized = true
-               call.resolve(["message": "Flic initialization successful."])
                self.notifyListeners("initialized", data: ["message": "Flic initialization successful."])
+               call.resolve(["message": "Flic initialization successful."])
            }
        }
 
@@ -126,7 +126,7 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDele
                 if (error == nil) {
                     if let button = button {
                         button.triggerMode = .clickAndDoubleClickAndHold
-                        print("Flic button found : \(button)")
+                        button.disconnect()
                         self.notifyListeners("scanSuccess", data: ["buttonId": button.bluetoothAddress])
                         call.resolve(["message" : "<IOS FLIC:> Scan Successful"])
                     }

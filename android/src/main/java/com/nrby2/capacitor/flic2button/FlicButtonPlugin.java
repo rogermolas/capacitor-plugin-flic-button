@@ -161,6 +161,7 @@ public class FlicButtonPlugin extends Plugin {
             public void onComplete(int result, int subCode, Flic2Button button) {
                 isScanning = false;
                 if (result == Flic2ScanCallback.RESULT_SUCCESS) {
+                    button.disconnectOrAbortPendingConnection();
                     notifyListeners("scanSuccess", new JSObject().put("buttonId", button.getBdAddr()));
                     JSObject r = new JSObject();
                     r.put("message", "<FLIC:> Scan Successful");
@@ -187,8 +188,8 @@ public class FlicButtonPlugin extends Plugin {
             call.reject("Button not found");
             return;
         }
-        button.addListener(new CustomFlickButtonListener());
         button.connect();
+        button.addListener(new CustomFlickButtonListener());
         call.resolve(new JSObject().put("message", "Button connected..."));
     }
 
@@ -257,6 +258,7 @@ public class FlicButtonPlugin extends Plugin {
             super.onReady(button, timestamp);
             JSObject event = generateDeviceObject(button);
             notifyListeners("buttonReady", event);
+            notifyListeners("buttonDidConnect", event);
         }
 
         @Override
@@ -284,12 +286,16 @@ public class FlicButtonPlugin extends Plugin {
 
         @Override
         public void onConnect(Flic2Button button) {
+            super.onConnect(button);
+            Log.i(TAG, "Toggle On onConnect");
             JSObject event = generateDeviceObject(button);
             notifyListeners("buttonDidConnect", event);
         }
 
         @Override
         public void onDisconnect(Flic2Button button) {
+            super.onDisconnect(button);
+            Log.i(TAG, "Toggle On onDisconnect");
             JSObject event = generateDeviceObject(button);
             notifyListeners("buttonDisconnected", event);
         }

@@ -10,10 +10,14 @@ export class FlickButtonWeb extends WebPlugin {
     }
     isScanning() {
         console.log('SCANNING');
-        return Promise.resolve({ scanning: false });
+        return Promise.resolve({ isScanning: true });
+    }
+    stopScanning() {
+        console.log('STOP SCANNING');
+        return Promise.resolve({ isScanning: false });
     }
     async scanForButtons() {
-        console.log('SCAN');
+        return Promise.resolve({ message: 'Connected' });
     }
     connectButton(options) {
         console.log('CONNECT', options);
@@ -22,6 +26,10 @@ export class FlickButtonWeb extends WebPlugin {
     disconnectButton(options) {
         console.log('DISCONNECT', options);
         return Promise.resolve({ message: 'Disconnected' });
+    }
+    forgetButton(options) {
+        console.log('FORGET', options);
+        return Promise.resolve({ message: 'Forgotten' });
     }
     removeAllButtons() {
         console.log('REMOVE ALL');
