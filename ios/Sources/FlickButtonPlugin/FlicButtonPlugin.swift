@@ -1,30 +1,82 @@
 import Foundation
 import Capacitor
 import flic2lib
+import CoreBluetooth
 
 @objc(FlicButtonPlugin)
-public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
-   
+public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate {
+    private var centralManager: CBCentralManager?
     public let identifier = "FlicButtonPlugin"
     public let jsName = "FlicButton"
+    private var isFlicInitialized = false
     
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "echo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getButtons", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "isScanning", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isScanning", returnType: CAPPluginReturnPromise),    
+        CAPPluginMethod(name: "stopScanning", returnType: CAPPluginReturnPromise), 
         CAPPluginMethod(name: "scanForButtons", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "connectButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disconnectButton", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "forgetButton", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeAllButtons", returnType: CAPPluginReturnPromise),
     ]
-
-    @objc func echo(_ call: CAPPluginCall) {
-        call.resolve(["value": "Flic Called"])
-    }
     
-    override public func load() {
-        FLICManager.configure(with: self, buttonDelegate: self, background: true)
-    }
+    @objc func initialize(_ call: CAPPluginCall) {
+           if !hasBluetoothPermissions() {
+               requestBluetoothPermissions { granted in
+                   if granted {
+                       self.setupFlic(call)
+                   } else {
+                       call.reject("Bluetooth permissions denied.")
+                   }
+               }
+           } else {
+               setupFlic(call)
+           }
+       }
+
+       private func setupFlic(_ call: CAPPluginCall) {
+           DispatchQueue.main.async {
+               if self.isFlicInitialized {
+                   call.resolve(["message": "Flic is already initialized."])
+                   self.notifyListeners("initialized", data: ["message": "Flic initialization successful."])
+                   return
+               }
+               FLICManager.configure(with: self, buttonDelegate: self, background: true)
+               self.isFlicInitialized = true
+               call.resolve(["message": "Flic initialization successful."])
+               self.notifyListeners("initialized", data: ["message": "Flic initialization successful."])
+           }
+       }
+
+       private func hasBluetoothPermissions() -> Bool {
+           if #available(iOS 13.1, *) {
+               return CBManager.authorization == .allowedAlways
+           } else {
+               return true
+           }
+       }
+
+       private func requestBluetoothPermissions(completion: @escaping (Bool) -> Void) {
+           if #available(iOS 13.1, *) {
+               centralManager = CBCentralManager(delegate: self, queue: nil)
+               DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Allow time for user prompt
+                   completion(CBManager.authorization == .allowedAlways)
+               }
+           } else {
+               completion(true)
+           }
+       }
+
+       // Required delegate method to trigger permission prompt
+       public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+           if central.state == .poweredOn {
+               print("Bluetooth is ON")
+           } else {
+               print("Bluetooth is OFF or Unauthorized")
+           }
+       }
 
     @objc public func getButtons(_ call: CAPPluginCall) {
         guard let buttons = FLICManager.shared()?.buttons() as? [FLICButton] else {
@@ -46,7 +98,6 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-
     // MARK: - Start Scanning for Buttons
     @objc public func isScanning(_ call: CAPPluginCall) {
         let scanning = FLICManager.shared()?.isScanning ?? false
@@ -55,12 +106,11 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
     
     @objc public func stopScanning(_ call: CAPPluginCall) {
         FLICManager.shared()?.stopScan()
-        call.resolve(["stopScan": "true"])
+        call.resolve(["isScanning": false])
     }
     
     @objc func scanForButtons(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            
             FLICManager.shared()?.scanForButtons(stateChangeHandler: { event in
                 var stateMessage = ""
                 switch event {
@@ -97,11 +147,6 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         button.connect()
-        notifyListeners("buttonConnected", data: [
-            "buttonId": button.bluetoothAddress,
-            "name": button.name ?? "",
-            "state": button.state.rawValue,
-        ])
         call.resolve(["message": "Button connected..."])
     }
 
@@ -114,15 +159,28 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         button.disconnect()
-        notifyListeners("buttonDisconnected", data: ["buttonId": button.bluetoothAddress])
         call.resolve(["message": "Button disconnected"])
     }
 
+    // MARK: - Remove Current Button
+    @objc func forgetButton(_ call: CAPPluginCall) {
+        guard let buttonId = call.getString("buttonId"),
+              let button = FLICManager.shared()?.buttons().first(
+                where: { $0.bluetoothAddress == buttonId }) else {
+            call.reject("Button not found")
+            return
+        }
+        FLICManager.shared()?.forgetButton(button, completion: { (uuid, error) in
+            self.notifyListeners("buttonRemoved", data: ["buttonId": uuid.uuidString])
+        })
+        call.resolve(["message": "button was removed"])
+    }
+    
     // MARK: - Remove All Buttons
     @objc func removeAllButtons(_ call: CAPPluginCall) {
         for button in FLICManager.shared()?.buttons() ?? [] {
             FLICManager.shared()?.forgetButton(button, completion: { (uuid, error) in
-                self.notifyListeners("buttonRemoved", data: ["buttonId": uuid.uuidString])
+                self.notifyListeners("allButtonRemoved", data: ["buttonId": uuid.uuidString])
             })
         }
         call.resolve(["message": "All buttons removed"])
@@ -132,7 +190,7 @@ public class FlicButtonPlugin: CAPPlugin, CAPBridgedPlugin {
 // MARK: - FLICButtonDelegate
 extension FlicButtonPlugin: FLICButtonDelegate {
     public func buttonDidConnect(_ button: FLICButton) {
-        notifyListeners("buttonConnected", data: [
+        notifyListeners("buttonDidConnect", data: [
             "buttonId": button.bluetoothAddress,
             "name": button.name ?? "",
             "state": button.state.rawValue,
