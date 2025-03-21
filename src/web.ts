@@ -1,13 +1,29 @@
-import { ListenerCallback, PluginListenerHandle, WebPlugin } from '@capacitor/core';
-
+import { PluginListenerHandle, WebPlugin } from '@capacitor/core';
 import type { FlicButtonPlugin } from './definitions';
 
 export class FlickButtonWeb extends WebPlugin implements FlicButtonPlugin {
+  
+  addListener<T = any>(
+    eventName: string,
+    listenerFunc: (data: T) => void
+  ): PluginListenerHandle { // ✅ Now returns PluginListenerHandle instead of Promise
+    console.log(`Listening for ${eventName} on web`);
 
-  async addListener(eventName: string, listenerFunc: ListenerCallback): Promise<PluginListenerHandle> {
-    console.log('ADD LISTENER', eventName);
-    return Promise.resolve({ remove: () => {} });
+    const handlePromise = super.addListener(eventName, listenerFunc); // ✅ Don't await
+
+    const handle: PluginListenerHandle = {
+      remove: async () => {
+        const resolvedHandle = await handlePromise;
+        await resolvedHandle.remove();
+      }
+    };
+    return handle;
   }
+
+  initialize(): Promise<{ value: string; }> {
+      return Promise.resolve({ value: "INITIALIZED"  });
+  }
+
   async getButtons(): Promise<{ buttons: { buttonId: string; name: string; state: number; }[]; }> {
     console.log('BUTTONS');
     return Promise.resolve({ buttons: [] });

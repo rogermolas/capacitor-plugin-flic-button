@@ -1,8 +1,18 @@
 import { WebPlugin } from '@capacitor/core';
 export class FlickButtonWeb extends WebPlugin {
-    async addListener(eventName, listenerFunc) {
-        console.log('ADD LISTENER', eventName);
-        return Promise.resolve({ remove: () => { } });
+    addListener(eventName, listenerFunc) {
+        console.log(`Listening for ${eventName} on web`);
+        const handlePromise = super.addListener(eventName, listenerFunc); // ✅ Don't await
+        const handle = {
+            remove: async () => {
+                const resolvedHandle = await handlePromise;
+                await resolvedHandle.remove();
+            }
+        };
+        return handle;
+    }
+    initialize() {
+        return Promise.resolve({ value: "INITIALIZED" });
     }
     async getButtons() {
         console.log('BUTTONS');
