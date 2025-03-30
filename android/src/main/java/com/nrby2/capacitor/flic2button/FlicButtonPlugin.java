@@ -21,12 +21,7 @@ import io.flic.flic2libandroid.Flic2ScanCallback;
 
 import java.util.List;
 
-@CapacitorPlugin(
-        name = "FlicButton",
-        permissions = {
-            @Permission(strings = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT }, alias = "BLUETOOTH")
-        }
-)
+@CapacitorPlugin(name = "FlicButton")
 public class FlicButtonPlugin extends Plugin {
     private static final String TAG = "FlicButtonPlugin";
     private Boolean isScanning = false;
