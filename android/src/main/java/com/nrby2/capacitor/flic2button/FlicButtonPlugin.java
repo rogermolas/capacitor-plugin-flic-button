@@ -24,8 +24,7 @@ import java.util.List;
 @CapacitorPlugin(
         name = "FlicButton",
         permissions = {
-                @Permission(strings = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT }, alias = "BLUETOOTH"),
-                @Permission(strings = { Manifest.permission.ACCESS_FINE_LOCATION }, alias = "LOCATION")
+            @Permission(strings = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT }, alias = "BLUETOOTH")
         }
 )
 public class FlicButtonPlugin extends Plugin {
