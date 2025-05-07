@@ -228,6 +228,8 @@ extension FlicButtonPlugin: FLICButtonDelegate {
             "buttonId": button.bluetoothAddress,
             "name": button.name ?? "",
             "state": button.state.rawValue,
+            "queued": queued,
+            "age": age,
             "event": "single_click"
         ])
     }
@@ -237,6 +239,8 @@ extension FlicButtonPlugin: FLICButtonDelegate {
             "buttonId": button.bluetoothAddress,
             "name": button.name ?? "",
             "state": button.state.rawValue,
+            "queued": queued,
+            "age": age,
             "event": "double_click"
         ])
     }
@@ -246,6 +250,8 @@ extension FlicButtonPlugin: FLICButtonDelegate {
             "buttonId": button.bluetoothAddress,
             "name": button.name ?? "",
             "state": button.state.rawValue,
+            "queued": queued,
+            "age": age,
             "event": "hold"
         ])
     }

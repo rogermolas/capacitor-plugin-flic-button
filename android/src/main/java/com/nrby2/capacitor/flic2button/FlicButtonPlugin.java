@@ -21,7 +21,13 @@ import io.flic.flic2libandroid.Flic2ScanCallback;
 
 import java.util.List;
 
-@CapacitorPlugin(name = "FlicButton")
+@CapacitorPlugin(
+        name = "FlicButton",
+        permissions = {
+                @Permission(strings = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT }, alias = "BLUETOOTH"),
+                @Permission(strings = { Manifest.permission.ACCESS_FINE_LOCATION }, alias = "LOCATION")
+        }
+)
 public class FlicButtonPlugin extends Plugin {
     private static final String TAG = "FlicButtonPlugin";
     private Boolean isScanning = false;
@@ -267,6 +273,8 @@ public class FlicButtonPlugin extends Plugin {
             super.onButtonClickOrHold(button, wasQueued, lastQueued, timestamp, isClick, isHold);
             JSObject event = generateDeviceObject(button);
             event.put("event", isHold ? "hold" : "isClick");
+            event.put("queued", wasQueued);
+            event.put("age", timestamp);
             notifyListeners("buttonClick", event);
         }
 
@@ -274,6 +282,8 @@ public class FlicButtonPlugin extends Plugin {
         public void onButtonSingleOrDoubleClick(Flic2Button button, boolean wasQueued, boolean lastQueued, long timestamp, boolean isSingleClick, boolean isDoubleClick) {
             super.onButtonSingleOrDoubleClick(button, wasQueued, lastQueued, timestamp, isSingleClick, isDoubleClick);
             JSObject event = generateDeviceObject(button);
+            event.put("queued", wasQueued);
+            event.put("age", timestamp);
             event.put("event", isSingleClick ? "single_click" : "double_click");
             notifyListeners("buttonClick", event);
         }
